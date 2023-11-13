@@ -1,0 +1,148 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct transaction_structure
+{
+    char description[200];
+    char date[50];
+    double amount;
+    char type;
+};
+
+int is_date_valid(const char *date)
+{
+    if (strlen (date) != 10)
+        return 0;
+    if (date[7] != '-' || date[4] != '-')
+        return 0;
+
+    int an = (date[0] - '0') * 1000 + (date[1] - '0') * 100 + (date[2] - '0') * 10 + (date[3] -'0');
+    int luna = (date[5] - '0') * 10 + (date[6] - '0');
+    int zi = (date[8] - '0') * 10 + (date[9] - '0');
+
+    if ( an < 1000)
+        return 0;
+
+    if ( luna < 0 || luna > 12 )    // anulez lunile care nu pot exista
+        return 0;
+
+    if ( (luna == 1 || luna == 3 || luna == 5 || luna == 7 || luna == 8 || luna == 10 || luna == 12) && zi > 31) // pentru lunile cu 31 de zile
+        return 0;
+
+    if ( (luna == 4 || luna == 6 || luna == 9 || luna == 11 ) && zi > 30) // // pentru lunile cu 30 de zile
+        return 0;
+
+    if ( an % 4 == 0 && luna == 2 && zi > 29) // anulez luna februarie de an bisec
+        return 0;
+
+    if( an % 4 != 0 && luna == 2 && zi > 28)//anulez pt luna februarie an non bisect
+        return 0;
+
+    return 1;
+
+}
+
+void add_transaction(struct transaction_structure *transactions, int *number_of_transactions)
+    {
+        struct transaction_structure new_transaction;
+        while(1)
+        {
+        printf("Enter the date (format YYYY-MM-DD)\n");
+        scanf("%s", new_transaction.date);
+        if(is_date_valid(new_transaction.date) == 1)
+            break;
+        else
+            printf("Please enter a valid date of the format YYYY-MM-DD\n");
+        }
+
+        printf("Enter the description:");
+        scanf(" %[^\n]s", new_transaction.description); // [^\n] reads until a new line is entered, and the space before so it doesn't include the first space if  it's entered
+
+        printf("Enter the amount:");
+        scanf("%lf", &new_transaction.amount);
+
+        while(1)
+        {
+            printf("Enter the type of transaction (I for income or E for expense):\n");
+            scanf(" %c", &new_transaction.type);
+            if(new_transaction.type == 'E' || new_transaction.type == 'I')
+                break;
+            else
+                printf("Invalid input. Please enter I for income or E for expense");
+        }
+
+        transactions[*number_of_transactions] = new_transaction;
+        (*number_of_transactions)++;
+
+        printf("The transaction was added succesfully\n");
+
+    }
+double calculate_balance(const struct transaction_structure *transactions, int number_of_transactions)
+{
+    double balance = 0;
+
+    for ( int i = 0 ; i < number_of_transactions ; i++)
+    {
+        if(transactions[i].type == 'I')
+            balance = balance + transactions[i].amount;
+        else
+            if(transactions[i].type == 'E')
+                balance = balance - transactions[i].amount;
+    }
+    return balance;
+}
+
+void print_transactions_history(const struct transaction_structure *transactions, int number_of_transactions)
+{
+    if (number_of_transactions == 0)
+    {
+        printf("There are no any transactions made!");
+        return;
+    }
+    printf("\n  ~ Transaction history ~ \n");
+    printf("%-15s%-30s%-15s%-10s\n", "Date", "Description", "Amount", "Type");
+
+    for (int i = 0; i < number_of_transactions; i++) {
+        printf("%-15s%-30s%-14.2f%c\n", transactions[i].date, transactions[i].description,
+               transactions[i].amount, transactions[i].type);
+    }
+}
+int main()
+{
+    struct transaction_structure transactions[100];
+    int number_of_transactions = 0;
+
+    while(1)
+    {
+        printf("Managing Financial Data App\n");
+        printf("1. Add transaction\n");
+        printf("2. Calculate balance\n");
+        printf("3. History of transactions\n");
+        printf("4. Exit\n");
+
+        int option;
+        printf("Enter your option\n");
+        scanf("%d", &option);
+
+        switch(option)
+        {
+            case 1:
+                add_transaction(transactions, &number_of_transactions);
+                break;
+            case 2:
+                printf("Your current balance is:%lf\n", calculate_balance(transactions, number_of_transactions));
+                break;
+            case 3:
+                print_transactions_history(transactions, number_of_transactions);
+                break;
+            case 4:
+                exit(0);
+            default:
+                printf("Invalid choice. Please enter a number between 1 and 5\n");
+        }
+
+    }
+
+    return 0;
+}
