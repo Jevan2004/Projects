@@ -1,48 +1,135 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
+//We initialize a struct where we hold the information of all the transaction
 struct transaction_structure
-{
-    char description[200];
-    char date[50];
-    double amount;
-    char type;
+{                           // we register:
+    char description[200]; // the description of the trasaction
+    char date[50];        // the date of the transaction
+    double amount;       // the amount of the transaction
+    char type;          // and the type of the transaction ( E if it's an expense or I if it's an expense
 };
-
+//Function to transform from string to integer for the year of the transaction
+int calculate_year(const char *date)
+{
+    int year = (date[0] - '0') * 1000 + (date[1] - '0') * 100 + (date[2] - '0') * 10 + (date[3] -'0');  // we transform it into integer and return
+    return year;
+}
+//Function to transform from string to integer for the month of the transaction
+int calculate_month(const char *date)
+{
+    int month = (date[5] - '0') * 10 + (date[6] - '0'); // we transform it into integer and return
+    return month;
+}
+//Function to transform from string to integer for the day of the transaction
+int calculate_day(const char *date)
+{
+    int day = (date[8] - '0') * 10 + (date[9] - '0');// we transform it into integer and return
+    return day;
+}
+//Function if a given date is valid , return 1 if it is valid , returns 0 if it is not valid
 int is_date_valid(const char *date)
 {
-    if (strlen (date) != 10)
-        return 0;
-    if (date[7] != '-' || date[4] != '-')
+    if (strlen (date) != 10)    // we use the format YYYY-MM-DD , in total are 10 characters, if the input string has more or less than 10 characters then the input date is not valid
         return 0;
 
-    int an = (date[0] - '0') * 1000 + (date[1] - '0') * 100 + (date[2] - '0') * 10 + (date[3] -'0');
-    int luna = (date[5] - '0') * 10 + (date[6] - '0');
-    int zi = (date[8] - '0') * 10 + (date[9] - '0');
-
-    if ( an < 1000)
+    if (date[7] != '-' || date[4] != '-') // we use '-' character to delimitate the year, month and day , if the characters '-' are not in the right places then the date is invalid
         return 0;
 
-    if ( luna < 0 || luna > 12 )    // anulez lunile care nu pot exista
+    int an = calculate_year(date);
+    int luna = calculate_month(date); // we transform the date string into integers so we can cancel the dates that don't exist more easily
+    int zi = calculate_day(date);
+
+    if ( an < 1000)     // we will not take take into account the dates before the year 1000, because of the format YYYY
+            return 0;
+
+
+    if ( luna < 0 || luna > 12 )    // we cancel out the months that don't exist
         return 0;
 
-    if ( (luna == 1 || luna == 3 || luna == 5 || luna == 7 || luna == 8 || luna == 10 || luna == 12) && zi > 31) // pentru lunile cu 31 de zile
+    if ( (luna == 1 || luna == 3 || luna == 5 || luna == 7 || luna == 8 || luna == 10 || luna == 12) && zi > 31) // we cancel out the invalid dates for they months that have 31 days
         return 0;
 
-    if ( (luna == 4 || luna == 6 || luna == 9 || luna == 11 ) && zi > 30) // // pentru lunile cu 30 de zile
+    if ( (luna == 4 || luna == 6 || luna == 9 || luna == 11 ) && zi > 30) // we cancel out the invalid dates for they months that have 30 days
         return 0;
 
-    if ( an % 4 == 0 && luna == 2 && zi > 29) // anulez luna februarie de an bisec
+    if ( an % 4 == 0 && luna == 2 && zi > 29) // we cancel out the invalid date for the month of February in the bisect years
         return 0;
 
-    if( an % 4 != 0 && luna == 2 && zi > 28)//anulez pt luna februarie an non bisect
+    if( an % 4 != 0 && luna == 2 && zi > 28) // we cancel out the invalid date for the month of February in the non-bisect years
         return 0;
 
     return 1;
 
 }
+//Function to compare 2 dates
+int compare_dates(int year1, int month1, int day1, int year2, int month2, int day2) // compares the 2 dates , returns 1 if the first date is greater than the second one,
+{                                                                                  // returns 0 if they are equal, return -1 if the second one is greater
+    if(year1 > year2)   // first we compare the years
+        return 1;
 
+    if(year1 == year2 && month1 > month2) // if the years are equal , we verify the months
+        return 1;
+
+    if(year1 == year2 && month1 == month2 && day1 > day2) // if the years and months are equal , we verify the days now
+        return 1;
+
+    if(year1 == year2 && month1 == month2 && day1 == day2) // if the years , months and days are equal , then the two dates are equal
+        return 0;
+
+    return -1;  // if the previous conditions are not met then the second date is greater than the first date
+}
+//Function to verify if a given date is between two other given dates
+int is_between_dates(int year1, int month1, int day1, int year2, int month2, int day2, int year_to_compare, int month_to_compare, int day_to_compare)
+{                                                                                                       // returns 1 if year_to_compare,month_to_compare and day_to_compare is between year1, and year2,
+                                                                                                    // between month1 and month2, and between day1 and day 2, it will return 0 otherwise
+    if(compare_dates(year_to_compare, month_to_compare, day_to_compare, year1, month1, day1) == -1) // we compare the date we need to compare with the beginning date
+        return 0;
+
+    if(compare_dates(year_to_compare, month_to_compare, day_to_compare, year2, month2, day2) == 1) // we compare the date we need to compare with the end date
+        return 0;
+
+    return 1;                                                                                    // will return 1 if the given date is between the interval
+}
+// Function to verify if a given string is a variable of type double
+int verify_if_double(const char *money)    // will return -1 if the given is not a double type number
+{
+    int length = strlen(money);        // we take the length of the string
+
+    int decimal_point = 0;            // in the decimal_point variable we hold how many decimal points ('.') we have in the string
+    
+    for ( int i = 0 ; i < length ; i++) // we go through the string
+    {
+        char character = money[i];          // we take each character and verify some conditions
+                                        
+        if (character == '.')        // if we meet a dot('.') we increase the value of the decimal points
+            {
+                decimal_point++;
+            }
+            
+        if(decimal_point == 2)      // if we meet a second dot('.') there is no point in continuing the search , a double type variable has only one dot in it's composition(e.g. 3.14)
+            return -1;              // so we return -1
+            
+        if((character < '0' || character > '9') && character != '.') // if there are other characters than numbers or dot('.') in the user input, then the number has not been introduced correctly 
+            return -1;                                              // so we return -1
+    }
+    return 0;                   // if the previous conditions are not met then the number has been correctly introduced
+}
+//Function to verify if the type of transaction has been correctly introduced
+int verify_type(const char *input)  // wil return
+{
+    int length = strlen(input);
+
+    if (length > 1)
+        return -1;
+
+    if(input[0] == 'E' || input[0] == 'I')
+        return 0;
+
+    return -1;
+}
 void add_transaction(struct transaction_structure *transactions, int *number_of_transactions)
     {
         struct transaction_structure new_transaction;
@@ -56,26 +143,38 @@ void add_transaction(struct transaction_structure *transactions, int *number_of_
             printf("Please enter a valid date of the format YYYY-MM-DD\n");
         }
 
-        printf("Enter the description:");
+        printf("Enter the description:\n");
         scanf(" %[^\n]s", new_transaction.description); // [^\n] reads until a new line is entered, and the space before so it doesn't include the first space if  it's entered
 
-        printf("Enter the amount:");
-        scanf("%lf", &new_transaction.amount);
-
+        char money[30];
         while(1)
         {
-            printf("Enter the type of transaction (I for income or E for expense):\n");
-            scanf(" %c", &new_transaction.type);
-            if(new_transaction.type == 'E' || new_transaction.type == 'I')
-                break;
+            printf("Enter the amount(will be considered only the first 2 digits of the number):\n");
+            scanf("%s", money);
+            if(verify_if_double(money) == -1)
+                printf("Invalid input please enter a valid sum\n");
             else
-                printf("Invalid input. Please enter I for income or E for expense");
+                break;
+        }
+        new_transaction.amount = atof(money);
+        while(1)
+        {
+            char input[100];
+            printf("Enter the type of transaction (I for income or E for expense):\n");
+            scanf("%s", input);
+            if(verify_type(input) == 0)
+            {
+                new_transaction.type = input[0];
+                break;
+            }
+            else
+                printf("Invalid input. Please enter I for income or E for expense\n");
         }
 
         transactions[*number_of_transactions] = new_transaction;
         (*number_of_transactions)++;
 
-        printf("The transaction was added succesfully\n");
+        printf("The transaction was added successfully\n");
 
     }
 double calculate_balance(const struct transaction_structure *transactions, int number_of_transactions)
@@ -97,7 +196,7 @@ void print_transactions_history(const struct transaction_structure *transactions
 {
     if (number_of_transactions == 0)
     {
-        printf("There are no any transactions made!");
+        printf("There are no any transactions made!\n");
         return;
     }
     printf("\n  ~ Transaction history ~ \n");
@@ -108,38 +207,181 @@ void print_transactions_history(const struct transaction_structure *transactions
                transactions[i].amount, transactions[i].type);
     }
 }
-int main()
+
+
+
+
+void financial_report(const struct transaction_structure *transactions, int number_of_transactions)
 {
-    struct transaction_structure transactions[100];
-    int number_of_transactions = 0;
+    if (number_of_transactions == 0)
+    {
+
+        printf("There is no transaction made until this moment. Please insert a transaction first!\n");
+        return;
+    }
+
+    printf("Between what dates do you want a financial report for?\n");
+
+    char first_date[15], second_date[15];
 
     while(1)
     {
-        printf("Managing Financial Data App\n");
+        printf("Enter the beginning date(format YYYY-MM-DD):\n");
+        scanf("%s", first_date);
+        if(is_date_valid(first_date) == 1)
+            {
+                break;
+            }
+        else
+            printf("Please enter a valid date of the format YYYY-MM-DD\n");
+    }
+
+    int year_first_date = calculate_year(first_date);
+    int month_first_date = calculate_month(first_date);
+    int day_first_date = calculate_day(first_date);
+
+        while(1)
+    {
+        printf("Enter the ending date(format YYYY-MM-DD):\n");
+        scanf("%s", second_date);
+        if(is_date_valid(second_date) == 1)
+            {
+                int year_second_date = calculate_year(second_date);
+                int month_second_date = calculate_month(second_date);
+                int day_second_date = calculate_day(second_date);
+
+                if(compare_dates(year_first_date, month_first_date, day_first_date, year_second_date, month_second_date, day_second_date) == -1)
+                    {
+                        break;      // to verify if the second date is bigger than the first date
+                    }
+                else
+                {
+                     printf("Please enter a date that is greater than the beginning date!\n");
+                }
+            }
+        else
+            printf("Please enter a valid date of the format YYYY-MM-DD\n");
+    }
+
+    int year_second_date = calculate_year(second_date);
+    int month_second_date = calculate_month(second_date);
+    int day_second_date = calculate_day(second_date);
+
+
+
+    double expenses = 0;
+    double incomes = 0;
+
+    for ( int i = 0 ; i < number_of_transactions ; i++)
+    {
+        int year = calculate_year(transactions[i].date);
+        int month = calculate_month(transactions[i].date);
+        int day = calculate_day(transactions[i].date);
+
+        if(is_between_dates(year_first_date, month_first_date, day_first_date, year_second_date, month_second_date, day_second_date, year, month, day) == 1)
+        {
+            if(transactions[i].type == 'E')
+                expenses = expenses + transactions[i].amount;
+            if(transactions[i].type == 'I')
+                incomes = incomes + transactions[i].amount;
+        }
+    }
+    printf("For the period %s", first_date);
+    printf(" - ");
+    printf("%s\n", second_date);
+    printf("The income is %lf\n", incomes);
+    printf("The expenses are %lf\n", expenses);
+}
+void save_to_file(const struct transaction_structure *transactions, int *number_of_transactions, const char *file_name)
+{
+    FILE *file;
+    file = fopen(file_name, "w");
+
+    for (int i = 0 ; i < number_of_transactions ; i++)
+    {
+        fprintf(file, "date=%s\ndescription=%s\namount=%lf\ntype=%c\n", transactions[i].date, transactions[i].description, transactions[i].amount, transactions[i].type);
+    }
+    fclose(file);
+
+    printf("The data was successfully saved in the file: %s\n", file_name);
+}
+void load_from_file(const struct transaction_structure *transactions, int *number_of_transactions, const char *file_name)
+{
+    FILE *file;
+    file = fopen(file_name, "r");
+    if(file == NULL)
+    {
+        printf("ERROR with opening the file\n");
+        return;
+    }
+    //*(number_of_transactions);
+
+    while(fscanf(file, "date=%s\ndescription=%s\namount=%lf\ntype=%c\n", &transactions[*number_of_transactions].date, &transactions[*number_of_transactions].description, &transactions[*number_of_transactions].amount, &transactions[*number_of_transactions].type) == 4)// EOF - end of file
+    {
+        (*number_of_transactions)++;
+    }
+    fclose(file);
+    printf("The data was loaded successfully.\n");
+}
+int main()
+{
+
+    struct transaction_structure transactions[100];
+    int number_of_transactions = 0;
+    printf("Managing Financial Data App\n");
+    printf("Welcome to the World Finance Bank! How can we help you?\n\n");
+    while(1)
+    {
+        printf("What do you want to do? Please select one option of the following:\n");
         printf("1. Add transaction\n");
         printf("2. Calculate balance\n");
         printf("3. History of transactions\n");
-        printf("4. Exit\n");
+        printf("4. Financial report\n");
+        printf("5. Save to file\n");
+        printf("6. Load from file\n");
+        printf("7. Exit\n\n");
 
-        int option;
+        char input[100];
         printf("Enter your option\n");
-        scanf("%d", &option);
-
-        switch(option)
+        scanf("%s", &input);
+        if(strlen(input) > 1)
+            printf("Invalid command. Please Please enter a number between 1 and 5\n");
+        else
         {
-            case 1:
-                add_transaction(transactions, &number_of_transactions);
-                break;
-            case 2:
-                printf("Your current balance is:%lf\n", calculate_balance(transactions, number_of_transactions));
-                break;
-            case 3:
-                print_transactions_history(transactions, number_of_transactions);
-                break;
-            case 4:
-                exit(0);
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 5\n");
+            int option = input[0] - '0';
+            switch(option)
+            {
+                case 1:
+                    add_transaction(transactions, &number_of_transactions);
+                    break;
+                case 2:
+                    printf("Your current balance is:%lf\n", calculate_balance(transactions, number_of_transactions));
+                    break;
+                case 3:
+                    print_transactions_history(transactions, number_of_transactions);
+                    break;
+                case 4:
+                    financial_report(transactions, number_of_transactions);
+                    break;
+                case 5:
+                    if(number_of_transactions != 0)
+                    {
+                        save_to_file(transactions, number_of_transactions, "account_data.txt");
+                    }
+                    else
+                    {
+                        printf("There is no transactions to save! Please insert some transactions first!\n");
+                    }
+                    break;
+                case 6:
+                    load_from_file(transactions, &number_of_transactions, "account_data.txt");
+                    break;
+                case 7:
+                    printf("Thank you for using our services! We hope that you will come back! Have a great day!\n");
+                    exit(0);
+                default:
+                    printf("Invalid choice. Please enter a number between 1 and 7\n");
+        }
         }
 
     }
