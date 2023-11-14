@@ -1,0 +1,171 @@
+We initialize a struct where we hold the information of all the transaction
+struct transaction_structure
+ we register:
+ 	-the description of the transaction
+        -the date of the transaction
+     	-the amount of the transaction
+        -and the type of the transaction ( E if it's an expense or I if it's an expense
+
+Function to transform from string to integer for the year of the transaction
+int calculate_year(const char *date)
+	-we transform year into integer and return it
+    
+Function to transform from string to integer for the month of the transaction
+int calculate_month(const char *date)
+	-we transform the month into integer and return it
+
+Function to transform from string to integer for the day of the transaction
+int calculate_day(const char *date)
+	-we transform the day into integer and return it
+    
+Function if a given date is valid , return 1 if it is valid , returns 0 if it is not valid
+int is_date_valid(const char *date)
+	-we use the format YYYY-MM-DD , in total are 10 characters, if the input string has more or less than 10 characters then the input date is not valid
+	-we use '-' character to delimitate the year, month and day , if the characters '-' are not in the right places then the date is invalid
+	-we transform the date string into integers so we can cancel the dates that don't exist more easily
+	-we will not take take into account the dates before the year 1000, because of the format YYYY
+	-we cancel out the months that don't exist
+	- we cancel out the invalid dates for they months that have 31 days
+	-we cancel out the invalid date for the month of February in the bisect years
+	-we cancel out the invalid date for the month of February in the non-bisect years
+
+Function to compare 2 dates
+int compare_dates(int year1, int month1, int day1, int year2, int month2, int day2) 
+	-compares the 2 dates , returns 1 if the first date is greater than the second one, returns 0 if they are equal, return -1 if the second one is greater
+	-first we compare the years
+	-if the years are equal , we verify the months
+	-if the years and months are equal , we verify the days now
+	-if the years , months and days are equal , then the two dates are equal
+	-if the previous conditions are not met then the second date is greater than the first date
+
+Function to verify if a given date is between two other given dates
+int is_between_dates(int year1, int month1, int day1, int year2, int month2, int day2, int year_to_compare, int month_to_compare, int day_to_compare)	
+	-returns 1 if year_to_compare,month_to_compare and day_to_compare is between year1, and year2, between month1 and month2, and between day1 and day 2, it will return 0 otherwise
+	-we compare the date we need to compare with the beginning date
+	-we compare the date we need to compare with the end date
+	-will return 1 if the given date is between the interval
+
+Function to verify if a given string is a variable of type double
+int verify_if_double(const char *money)     
+	-will return -1 if the given is not a double type number
+	-we take the length of the string
+	-in the decimal_point variable we hold how many decimal points ('.') we have in the string	
+	- we go through the string
+	-we take each character and verify some conditions
+	-if we meet a dot('.') we increase the value of the decimal points
+	-if we meet a second dot('.') there is no point in continuing the search , a double type variable has only one dot in it's composition(e.g. 3.14) so we return -1
+	-if there are other characters than numbers or dot('.') in the user input, then the number has not been introduced correctly so we return -1
+	-if the previous conditions are not met then the number has been correctly introduced
+
+Function to verify if the type of transaction has been correctly introduced
+int verify_type(const char *input)  
+	-will return -1 if the user introduced the type incorrectly, 0 if it is correct
+	-we take the length of the string
+	-if the length is bigger than one then the input is not correctly introduced
+	-if the input type is correct we return 0
+	-return -1 if it's wrongly introduced
+
+Function to add transaction
+void add_transaction(struct transaction_structure *transactions, int *number_of_transactions)
+	-we initialize a new transaction
+	-we ask the user to introduce a date
+	-read the date
+	-we verify if the date is valid
+	-if the date is not valid  we will keep ask the user to introduce a correct date
+	-ask the user to introduce a description of the transaction
+	-we read the description string until a new line is met
+	-read the user input
+	-the amount cannot be negative , because we will take into account if it's a Income or expense later
+	- we verify if the input has been introduced correctly
+	-repeat until the introduced value is correct
+	-we add the amount into the new structure with the atof function
+	-variable used for holding the input user , of the type variable
+	-ask the for the user's input
+	-read the input
+	-if the input is valid add to the new transaction
+	-if it's not valid then print error message
+	-add the new transaction into the structure
+	-let the user know that the new translation is registered
+
+Function to calculate balance
+double calculate_balance(const struct transaction_structure *transactions, int number_of_transactions)
+	-initialize the balance
+	-go through all the transaction
+	-if it's an income then add to balance
+	-if it's an expense then substract from the balance
+	-return the balance
+
+Function to print all the previous transactions
+void print_transactions_history(const struct transaction_structure *transactions, int number_of_transactions)
+	-if there are no transactions made , display a message
+	-initialize a header for a table , with the columns being the details of a transaction
+	-go through all the transactions
+	- print the current transaction details
+
+	
+ Function to give details about transactions between a given period
+	void financial_report(const struct transaction_structure *transactions, int number_of_transactions)
+	-if there are not any transaction display error message
+	-char first_date[15], second_date[15];   // variables to hold the two dates
+	-ask the user for beginning date
+	- read the beginning date
+	-we verify if the date is valid
+	-if the date is not valid print an error
+	-transform the string of the beginning date into integers, year , month , day
+	-ask the user for the end date
+	- read the end date
+	- we verify if the date is valid
+	- transform the string of the end date into integers , year , month , day
+	-verify if the end date is greater than the beginning date
+	-if the end date is smaller than the beginning date print error message
+	-print error if the date is not valid
+	-transform the string of the end date into integers , year , month , day
+	- initialize the income and expenses of all the transactions
+	- go through all the transactions
+	-transform the date of the transaction at index i, into integers, year, month and date
+	-calculate the expenses
+	- calculate the incomes
+	-print the incomes and expenses of the given period of time
+
+
+ Function to save the data in a file
+void save_to_file(const struct transaction_structure *transactions, int *number_of_transactions, const char *file_name)
+	-declare the file
+	-open the file in write mode
+	-go through all the transactions
+	- print in the file all the transaction details
+	-close the file	
+	-let the user know the data has been saved
+
+Function to load the data from a file
+void load_from_file(const struct transaction_structure *transactions, int *number_of_transactions, const char *file_name)
+	-declare the file
+	-open the file in read mode
+	-if there is no data in the file print an error
+	-import all the saved data for the transactions into the transaction structure
+	-the while goes as long as it reads the 4 transaction details
+	-close the file
+	-let the user know that the data has been imported
+
+int main()
+	-initialize the transactions structure
+	-initialize the number of transactions
+	-print the app title
+	- print welcome message
+	- print all the services he have involving transactions
+	-initialize the option
+	-ask the user for input
+	-read the input
+	-verify if the command is valid , if not print error message
+	-transform the string of the option in integer
+	-do the action the user asked for:
+	1.add transaction
+	2.print balance
+	3.print the history of transactions
+	4.do a financial report
+	5.save the current transactions in afile, print error if it's not any data to save
+	7.load the data from the file
+	-exit the app
+	-print exit message
+	-if the user's option is not valid print error message
+ 
