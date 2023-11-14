@@ -99,240 +99,282 @@ int verify_if_double(const char *money)    // will return -1 if the given is not
     int length = strlen(money);        // we take the length of the string
 
     int decimal_point = 0;            // in the decimal_point variable we hold how many decimal points ('.') we have in the string
-    
+
     for ( int i = 0 ; i < length ; i++) // we go through the string
     {
         char character = money[i];          // we take each character and verify some conditions
-                                        
+
         if (character == '.')        // if we meet a dot('.') we increase the value of the decimal points
             {
                 decimal_point++;
             }
-            
+
         if(decimal_point == 2)      // if we meet a second dot('.') there is no point in continuing the search , a double type variable has only one dot in it's composition(e.g. 3.14)
             return -1;              // so we return -1
-            
-        if((character < '0' || character > '9') && character != '.') // if there are other characters than numbers or dot('.') in the user input, then the number has not been introduced correctly 
+
+        if((character < '0' || character > '9') && character != '.') // if there are other characters than numbers or dot('.') in the user input, then the number has not been introduced correctly
             return -1;                                              // so we return -1
     }
     return 0;                   // if the previous conditions are not met then the number has been correctly introduced
 }
 //Function to verify if the type of transaction has been correctly introduced
-int verify_type(const char *input)  // wil return
+int verify_type(const char *input)  // will return -1 if the user introduced the type incorrectly, 0 if it is correct
 {
-    int length = strlen(input);
+    int length = strlen(input); // we take the length of the string
 
-    if (length > 1)
+    if (length > 1)     // if the length is bigger than one then the input is not correctly introduced
         return -1;
 
-    if(input[0] == 'E' || input[0] == 'I')
+    if(input[0] == 'E' || input[0] == 'I')      // if the input type is correct we return 0
         return 0;
 
-    return -1;
+    return -1;          // return -1 if it's wrongly introduced
 }
+//Function to add transaction
 void add_transaction(struct transaction_structure *transactions, int *number_of_transactions)
     {
-        struct transaction_structure new_transaction;
+        struct transaction_structure new_transaction;   // we initialize a new transaction
+
         while(1)
         {
-        printf("Enter the date (format YYYY-MM-DD)\n");
-        scanf("%s", new_transaction.date);
-        if(is_date_valid(new_transaction.date) == 1)
-            break;
-        else
-            printf("Please enter a valid date of the format YYYY-MM-DD\n");
+            printf("Enter the date (format YYYY-MM-DD)\n"); // we ask the user to introduce a date
+
+            scanf("%s", new_transaction.date);      // read the date
+
+            if(is_date_valid(new_transaction.date) == 1)    // we verify if the date is valid
+                break;
+            else
+                printf("Please enter a valid date of the format YYYY-MM-DD\n"); // if the date is not valid  we will keep ask the user to introduce a correct date
         }
 
-        printf("Enter the description:\n");
-        scanf(" %[^\n]s", new_transaction.description); // [^\n] reads until a new line is entered, and the space before so it doesn't include the first space if  it's entered
+        printf("Enter the description:\n");         // ask the user to introduce a description of the transaction
 
-        char money[30];
+        scanf(" %[^\n]s", new_transaction.description); // we read the description string until a new line is met
+
+        char money[30];         // variable used for holding the input user , of the amount variable
+
         while(1)
         {
-            printf("Enter the amount(will be considered only the first 2 digits of the number):\n");
-            scanf("%s", money);
-            if(verify_if_double(money) == -1)
-                printf("Invalid input please enter a valid sum\n");
+            printf("Enter the amount(will be considered only the first 2 digits of the number):\n"); // ask the user to insert the amount of the transaction
+
+            scanf("%s", money);     // read the user input
+
+            if(money[0] == '-')                                             // the amount cannot be negative , because we will take into account if it's a Income or expense later
+                printf("The amount entered must be a positive number\n");
+            else
+                if(verify_if_double(money) == -1)                         // we verify if the input has been introduced correctly
+                    printf("Invalid input please enter a valid sum\n");  // repeat until the introduced value is correct
             else
                 break;
         }
-        new_transaction.amount = atof(money);
+
+        new_transaction.amount = atof(money);   // we add the amount into the new structure with the atof function
+
         while(1)
         {
-            char input[100];
-            printf("Enter the type of transaction (I for income or E for expense):\n");
-            scanf("%s", input);
-            if(verify_type(input) == 0)
+            char input[100];        // variable used for holding the input user , of the type variable
+
+            printf("Enter the type of transaction (I for income or E for expense):\n"); // ask the for the user's input
+
+            scanf("%s", input);     // read the input
+
+            if(verify_type(input) == 0)             // if the input is valid add to the new transaction
             {
                 new_transaction.type = input[0];
                 break;
             }
             else
-                printf("Invalid input. Please enter I for income or E for expense\n");
+                printf("Invalid input. Please enter I for income or E for expense\n");      // if it's not valid then print error message
         }
 
-        transactions[*number_of_transactions] = new_transaction;
+        transactions[*number_of_transactions] = new_transaction;        // add the new transaction into the structure
         (*number_of_transactions)++;
 
-        printf("The transaction was added successfully\n");
+        printf("The transaction was added successfully\n"); // let the user know that the new translation is registered
 
     }
+//Function to calculate balance
 double calculate_balance(const struct transaction_structure *transactions, int number_of_transactions)
 {
-    double balance = 0;
+    double balance = 0;     // initialize the balance
 
-    for ( int i = 0 ; i < number_of_transactions ; i++)
+    for ( int i = 0 ; i < number_of_transactions ; i++)     // go through all the transaction
     {
-        if(transactions[i].type == 'I')
+        if(transactions[i].type == 'I')                     // if it's an income then add to balance
             balance = balance + transactions[i].amount;
         else
-            if(transactions[i].type == 'E')
+            if(transactions[i].type == 'E')                 // if it's an expense then substract from the balance
                 balance = balance - transactions[i].amount;
     }
-    return balance;
+    return balance;         // return the balance
 }
-
+// Function to print all the previous transactions
 void print_transactions_history(const struct transaction_structure *transactions, int number_of_transactions)
 {
-    if (number_of_transactions == 0)
+    if (number_of_transactions == 0)                    // if there are no transactions made , display a message
     {
         printf("There are no any transactions made!\n");
         return;
     }
+
     printf("\n  ~ Transaction history ~ \n");
-    printf("%-15s%-30s%-15s%-10s\n", "Date", "Description", "Amount", "Type");
 
-    for (int i = 0; i < number_of_transactions; i++) {
-        printf("%-15s%-30s%-14.2f%c\n", transactions[i].date, transactions[i].description,
-               transactions[i].amount, transactions[i].type);
-    }
+    printf("%-15s%-30s%-15s%-10s\n", "Date", "Description", "Amount", "Type");      // initialize a header for a table , with the columns being the details of a transaction
+
+    for (int i = 0; i < number_of_transactions; i++)        // go through all the transactions
+        {
+                printf("%-15s%-30s%-14.2f%c\n", transactions[i].date, transactions[i].description,      // print the current transaction details
+                transactions[i].amount, transactions[i].type);
+        }
 }
-
-
-
-
+// Function to give details about transactions between a given period
 void financial_report(const struct transaction_structure *transactions, int number_of_transactions)
 {
-    if (number_of_transactions == 0)
+    if (number_of_transactions == 0)            // if there are not any transaction display error message
     {
-
         printf("There is no transaction made until this moment. Please insert a transaction first!\n");
         return;
     }
 
-    printf("Between what dates do you want a financial report for?\n");
+    printf("Between what dates do you want a financial report for?\n"); // ask user for input
 
-    char first_date[15], second_date[15];
+    char first_date[15], second_date[15];   // variables to hold the two dates
 
     while(1)
     {
-        printf("Enter the beginning date(format YYYY-MM-DD):\n");
-        scanf("%s", first_date);
-        if(is_date_valid(first_date) == 1)
+        printf("Enter the beginning date(format YYYY-MM-DD):\n");   // ask the user for beginning date
+
+        scanf("%s", first_date);        // read the beginning date
+
+        if(is_date_valid(first_date) == 1)      // we verify if the date is valid
             {
                 break;
             }
         else
-            printf("Please enter a valid date of the format YYYY-MM-DD\n");
+            printf("Please enter a valid date of the format YYYY-MM-DD\n"); // if the date is not valid print an error
     }
 
     int year_first_date = calculate_year(first_date);
-    int month_first_date = calculate_month(first_date);
+    int month_first_date = calculate_month(first_date); // transform the string of the beginning date into integers, year , month , day
     int day_first_date = calculate_day(first_date);
 
         while(1)
     {
-        printf("Enter the ending date(format YYYY-MM-DD):\n");
-        scanf("%s", second_date);
-        if(is_date_valid(second_date) == 1)
+        printf("Enter the ending date(format YYYY-MM-DD):\n");  // ask the user for the end date
+
+        scanf("%s", second_date);   // read the end date
+
+        if(is_date_valid(second_date) == 1)     // we verify if the date is valid
             {
                 int year_second_date = calculate_year(second_date);
-                int month_second_date = calculate_month(second_date);
+                int month_second_date = calculate_month(second_date);       // transform the string of the end date into integers , year , month , day
                 int day_second_date = calculate_day(second_date);
 
-                if(compare_dates(year_first_date, month_first_date, day_first_date, year_second_date, month_second_date, day_second_date) == -1)
+                if(compare_dates(year_first_date, month_first_date, day_first_date,
+                                  year_second_date, month_second_date, day_second_date) == -1)    // verify if the end date is greater than the beginning date
                     {
-                        break;      // to verify if the second date is bigger than the first date
+                        break;
                     }
                 else
                 {
-                     printf("Please enter a date that is greater than the beginning date!\n");
+                     printf("Please enter a date that is greater than the beginning date!\n"); // if the end date is smaller than the beginning date print error message
                 }
             }
         else
-            printf("Please enter a valid date of the format YYYY-MM-DD\n");
+            printf("Please enter a valid date of the format YYYY-MM-DD\n");     // print error if the date is not valid
     }
 
     int year_second_date = calculate_year(second_date);
-    int month_second_date = calculate_month(second_date);
+    int month_second_date = calculate_month(second_date);   // transform the string of the end date into integers , year , month , day
     int day_second_date = calculate_day(second_date);
 
 
 
-    double expenses = 0;
+    double expenses = 0;        // initialize the income and expenses of all the transactions
     double incomes = 0;
 
-    for ( int i = 0 ; i < number_of_transactions ; i++)
+    for ( int i = 0 ; i < number_of_transactions ; i++)     // go through all the transactions
     {
         int year = calculate_year(transactions[i].date);
-        int month = calculate_month(transactions[i].date);
+        int month = calculate_month(transactions[i].date);      // transform the date of the transaction at index i, into integers, year, month and date
         int day = calculate_day(transactions[i].date);
 
-        if(is_between_dates(year_first_date, month_first_date, day_first_date, year_second_date, month_second_date, day_second_date, year, month, day) == 1)
-        {
+        if(is_between_dates(year_first_date, month_first_date, day_first_date,
+                             year_second_date, month_second_date, day_second_date, year, month, day) == 1)
+        {                                         // verify if the current transaction is between the dates asked by the user
             if(transactions[i].type == 'E')
-                expenses = expenses + transactions[i].amount;
+                expenses = expenses + transactions[i].amount;       // calculate the expenses
             if(transactions[i].type == 'I')
-                incomes = incomes + transactions[i].amount;
+                incomes = incomes + transactions[i].amount;  // calculate the incomes
         }
     }
-    printf("For the period %s", first_date);
+    printf("For the period %s", first_date);    // print the incomes and expenses of the given period of time
+
     printf(" - ");
+
     printf("%s\n", second_date);
+
     printf("The income is %lf\n", incomes);
+
     printf("The expenses are %lf\n", expenses);
+
 }
+// Function to save the data in a file
 void save_to_file(const struct transaction_structure *transactions, int *number_of_transactions, const char *file_name)
 {
-    FILE *file;
-    file = fopen(file_name, "w");
+    FILE *file;                 // declare the file
 
-    for (int i = 0 ; i < number_of_transactions ; i++)
+    file = fopen(file_name, "w");       // open the file in write mode
+
+    for (int i = 0 ; i < number_of_transactions ; i++)    // go through all the transactions
     {
-        fprintf(file, "date=%s\ndescription=%s\namount=%lf\ntype=%c\n", transactions[i].date, transactions[i].description, transactions[i].amount, transactions[i].type);
+        fprintf(file, "date=%s\ndescription=%s\namount=%lf\ntype=%c\n", transactions[i].date,  // print in the file all the transaction details
+                transactions[i].description, transactions[i].amount, transactions[i].type);
     }
-    fclose(file);
 
-    printf("The data was successfully saved in the file: %s\n", file_name);
+    fclose(file);   // close the file
+
+    printf("The data was successfully saved in the file: %s\n", file_name); // let the user know the data has been saved
 }
+// Function to load the data from a file
 void load_from_file(const struct transaction_structure *transactions, int *number_of_transactions, const char *file_name)
 {
-    FILE *file;
-    file = fopen(file_name, "r");
-    if(file == NULL)
+    FILE *file;         // declare the file
+
+    file = fopen(file_name, "r");       // open the file in read mode
+
+    if(file == NULL)                        // if there is no data in the file print an error
     {
         printf("ERROR with opening the file\n");
         return;
     }
-    //*(number_of_transactions);
+    //*(number_of_transactions)++;
 
-    while(fscanf(file, "date=%s\ndescription=%s\namount=%lf\ntype=%c\n", &transactions[*number_of_transactions].date, &transactions[*number_of_transactions].description, &transactions[*number_of_transactions].amount, &transactions[*number_of_transactions].type) == 4)// EOF - end of file
-    {
-        (*number_of_transactions)++;
-    }
-    fclose(file);
-    printf("The data was loaded successfully.\n");
+    while(fscanf(file, "date=%s\ndescription=%s\namount=%lf\ntype=%c\n", &transactions[*number_of_transactions].date,
+                  &transactions[*number_of_transactions].description, &transactions[*number_of_transactions].amount,
+                  &transactions[*number_of_transactions].type) == 4)        // import all the saved data for the transactions into the transaction structure
+        {                                                                      // the while goes as long as it reads the 4 transaction details
+            (*number_of_transactions)++;
+        }
+
+    fclose(file);       // close the file
+
+    printf("The data was loaded successfully.\n");      // let the user know that the data has been imported
 }
 int main()
 {
 
-    struct transaction_structure transactions[100];
-    int number_of_transactions = 0;
-    printf("Managing Financial Data App\n");
-    printf("Welcome to the World Finance Bank! How can we help you?\n\n");
+    struct transaction_structure transactions[100];     //initialize the transactions structure
+
+    int number_of_transactions = 0;     // //initialize the number of transactions
+
+    printf("Managing Financial Data App\n");        // print the app title
+
+    printf("Welcome to the World Finance Bank! How can we help you?\n\n"); // print welcome message
+
     while(1)
     {
-        printf("What do you want to do? Please select one option of the following:\n");
+        printf("What do you want to do? Please select one option of the following:\n");     // print all the services he have involving transactions
         printf("1. Add transaction\n");
         printf("2. Calculate balance\n");
         printf("3. History of transactions\n");
@@ -341,49 +383,51 @@ int main()
         printf("6. Load from file\n");
         printf("7. Exit\n\n");
 
-        char input[100];
-        printf("Enter your option\n");
-        scanf("%s", &input);
-        if(strlen(input) > 1)
+        char input[100];        // initialize the option
+
+        printf("Enter your option\n");  // ask the user for input
+
+        scanf("%s", &input);        // read the input
+
+        if(strlen(input) > 1)       // verify if the command is valid , if not print error message
             printf("Invalid command. Please Please enter a number between 1 and 5\n");
         else
         {
-            int option = input[0] - '0';
-            switch(option)
+            int option = input[0] - '0';        // transform the string of the option in integer
+            switch(option)          // do the action the user asked for
             {
-                case 1:
+                case 1:                                        // add transaction
                     add_transaction(transactions, &number_of_transactions);
                     break;
-                case 2:
-                    printf("Your current balance is:%lf\n", calculate_balance(transactions, number_of_transactions));
+                case 2:         // print balance
+                    printf("Your current balance is:%.2f\n", calculate_balance(transactions, number_of_transactions));
                     break;
-                case 3:
+                case 3:         // print the history of transactions
                     print_transactions_history(transactions, number_of_transactions);
                     break;
-                case 4:
+                case 4:         // do a financial report
                     financial_report(transactions, number_of_transactions);
                     break;
-                case 5:
+                case 5:         // save the current transactions in afile
                     if(number_of_transactions != 0)
                     {
                         save_to_file(transactions, number_of_transactions, "account_data.txt");
                     }
-                    else
+                    else            // print error if it's not any data to save
                     {
                         printf("There is no transactions to save! Please insert some transactions first!\n");
                     }
                     break;
-                case 6:
+                case 6:         // load the data from the file
                     load_from_file(transactions, &number_of_transactions, "account_data.txt");
                     break;
-                case 7:
-                    printf("Thank you for using our services! We hope that you will come back! Have a great day!\n");
+                case 7:         // exit the app
+                    printf("Thank you for using our services! We hope that you will come back! Have a great day!\n");       // print exit message
                     exit(0);
                 default:
-                    printf("Invalid choice. Please enter a number between 1 and 7\n");
+                    printf("Invalid choice. Please enter a number between 1 and 7\n");  // if the user's option is not valid print error message
+            }
         }
-        }
-
     }
 
     return 0;
